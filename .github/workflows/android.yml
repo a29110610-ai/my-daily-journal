@@ -19,13 +19,15 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # این گام کل پوشه خراب گریدل قبلی را پاک کرده و نسخه پیش‌فرض و هماهنگ خود سیستم اوبونتو را فعال می‌کند
-    - name: Clear corrupt wrapper and setup local Gradle
+    # دانلود نسخه فوق‌العاده پایدار و رسمی گریدل ۸.۴ به روشی که ارور شبکه ندهد
+    - name: Setup Gradle 8.4
       run: |
         rm -rf gradle/wrapper
         rm -f gradlew
         rm -f gradlew.bat
-        sudo apt-get update && sudo apt-get install -y gradle
+        wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip
+        sudo unzip -q gradle-8.4-bin.zip -d /opt
+        echo "/opt/gradle-8.4/bin" >> $GITHUB_PATH
 
     - name: Create Debug Keystore
       run: |
@@ -33,7 +35,7 @@ jobs:
         keytool -genkey -v -keystore $HOME/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         cp $HOME/.android/debug.keystore ./app/debug.keystore || true
 
-    # اجرای کامپایل با گریدل محلی سرور و ترفند حل مشکل KSP
+    # اجرای ساخت با نسخه دقیق و ترفند پردازش کد داخلی کاتلین
     - name: Build with Gradle
       run: gradle assembleDebug --no-daemon -Dkotlin.compiler.execution.strategy=in-process
 
