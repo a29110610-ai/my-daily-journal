@@ -13,23 +13,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: set up JDK 17
+    - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
-    - name: Regenerate Gradle Wrapper
-      run: |
-        rm -f gradle/wrapper/gradle-wrapper.jar
-        rm -f gradlew
-        rm -f gradlew.bat
-        curl -LO https://raw.githubusercontent.com/gradle/gradle/v8.5/gradlew
-        curl -LO https://raw.githubusercontent.com/gradle/gradle/v8.5/gradlew.bat
-        mkdir -p gradle/wrapper
-        curl -L -o gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v8.5/gradle/wrapper/gradle-wrapper.jar
-        chmod +x gradlew
+    # استفاده از اکشن رسمی گریدل که خودش محیط را کاملاً آماده و کانفیگ می‌کند
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
 
     - name: Create Debug Keystore
       run: |
@@ -37,9 +31,9 @@ jobs:
         keytool -genkey -v -keystore $HOME/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         cp $HOME/.android/debug.keystore ./app/debug.keystore || true
 
-    # اضافه کردن پارامترهای ویژه برای حل قطعی ارور KSP و اجرای بدون باگ
+    # اجرای کامپایل با دستور مستقیم و بدون نیاز به فایل‌های رپر محلی
     - name: Build with Gradle
-      run: ./gradlew assembleDebug --no-daemon -Dorg.gradle.jvmargs="-Xmx2048m -Dkotlin.compiler.execution.strategy=in-process"
+      run: gradle assembleDebug --no-daemon -Dkotlin.compiler.execution.strategy=in-process
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
