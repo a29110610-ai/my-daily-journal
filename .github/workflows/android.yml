@@ -19,11 +19,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # استفاده از اکشن رسمی گریدل که خودش محیط را کاملاً آماده و کانفیگ می‌کند
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.5'
+    # این گام کل پوشه خراب گریدل قبلی را پاک کرده و نسخه پیش‌فرض و هماهنگ خود سیستم اوبونتو را فعال می‌کند
+    - name: Clear corrupt wrapper and setup local Gradle
+      run: |
+        rm -rf gradle/wrapper
+        rm -f gradlew
+        rm -f gradlew.bat
+        sudo apt-get update && sudo apt-get install -y gradle
 
     - name: Create Debug Keystore
       run: |
@@ -31,7 +33,7 @@ jobs:
         keytool -genkey -v -keystore $HOME/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         cp $HOME/.android/debug.keystore ./app/debug.keystore || true
 
-    # اجرای کامپایل با دستور مستقیم و بدون نیاز به فایل‌های رپر محلی
+    # اجرای کامپایل با گریدل محلی سرور و ترفند حل مشکل KSP
     - name: Build with Gradle
       run: gradle assembleDebug --no-daemon -Dkotlin.compiler.execution.strategy=in-process
 
